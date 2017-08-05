@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#define MAX_THREAD_IDLE_TIME 3000
+
 namespace EasyLog {
     /**
     *   EasyLogType
@@ -63,9 +65,9 @@ namespace EasyLog {
         // Max idle time in ms
         int _max_thread_idle_time;
         // Applications using EasyLog need to implement the processItem function
-        virtual void processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp);
+        virtual void processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp) {};
     private:
-        EasyLog() = default;
+        EasyLog() : _log_queue_thread(this), _running(false), _shutting_down(false), _max_thread_idle_time(MAX_THREAD_IDLE_TIME){};
         // Stop the processing of log items safely
         void stopProcessing();
         // Message item that contains data associated with specific log
@@ -82,17 +84,19 @@ namespace EasyLog {
         // Get the next item to process and remove it from the queue safely
         EasyLog::EasyLogItem getNextItem();
         // Manage the EasyLog dispatch
-        class EasyLogQueueThread {
+        class EasyLogQueueThread : public std::thread {
             public:
                 EasyLogQueueThread() = default;
                 EasyLogQueueThread(EasyLog *easy_log);
-                virtual void run();
+                void run();
+                void start();
                 bool is_active() { return _is_active; };
             protected:
                 virtual const char *getThreadName() { return "EasyLogQueueThread"; }
             private:
                 bool _is_active;
                 EasyLog *_easy_log;
+                thread _m_thread;
         };
         // Process items and return the number processed
         int processItems();

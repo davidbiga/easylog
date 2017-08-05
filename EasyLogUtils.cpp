@@ -18,9 +18,9 @@ namespace EasyLogUtils {
         if (!includeMilliseconds)
             return std::string(dateTime);
 
-        int milliseconds = now / 1000;
+        long milliseconds = now / 1000;
         char dateMilliTime[256];
-        snprintf(dateMilliTime, sizeof(dateMilliTime)-1, "%s%s%.03i", dateTime, separator, milliseconds);
+        snprintf(dateMilliTime, sizeof(dateMilliTime)-1, "%s%s%.3li", dateTime, separator, milliseconds);
 
         return std::string(dateMilliTime);
     }

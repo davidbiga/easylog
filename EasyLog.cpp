@@ -2,8 +2,9 @@
 #include "EasyLogUtils.cpp"
 
 #include <assert.h>
+#include <condition_variable>
+#include <chrono>
 
-#define MAX_THREAD_IDLE_TIME 3000
 #define MAX_LABEL_SIZE 256
 #define MAX_FORMAT_ARGS_SIZE 4096
 
@@ -83,10 +84,12 @@ namespace EasyLog {
     }
     /**
     *  Processes individual EasyLogItem(s)
+    *  -  This method is responsible for delivering messages to user.
+    *  -  See main.cpp for example case.
     */
-    void EasyLog::processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp) {
-        // This is critical for the user to override in their subclass of EasyLog in order to get log messages
-    }
+    /*void EasyLog::processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp) {
+        std::cerr << "sdf";
+    }*/
     /** 
     *  Adds formatting and creates the EasyLogItem if direct is false
     */
@@ -95,7 +98,7 @@ namespace EasyLog {
         std::string dateTime = EasyLogUtils::getTimeAsString(":", true);
 
         size_t fmt_len = strlen(fmt);
-        int buffer_len = fmt_len + MAX_LABEL_SIZE;
+        unsigned long buffer_len = fmt_len + MAX_LABEL_SIZE;
         char label [buffer_len];
         int log_len = 0;
 
@@ -116,7 +119,7 @@ namespace EasyLog {
     void EasyLog::addItem(EasyLogItem item) {
         std::cout << "EasyLog::addItem" << std::endl;
         std::unique_lock<std::mutex> lock(_log_queue_mutex);
-
+        
         if (_shutting_down)
         {
             // EasyLog has shut down, abort
@@ -129,7 +132,7 @@ namespace EasyLog {
 
         if (!_running) {
             _running = true;
-            //_log_queue_thread.start();
+            _log_queue_thread.start();
         }
     }
     /**
@@ -137,6 +140,7 @@ namespace EasyLog {
     */
     size_t EasyLog::queueSize() const {
         std::unique_lock<std::mutex> lock(_log_queue_mutex);
+        
         return _log_queue.size();
     }
     /**
@@ -150,12 +154,12 @@ namespace EasyLog {
         _running = false;
         _shutting_down = true;
 
-        /*utility::Condition cond;
+        std::condition_variable cond;
 
         // Wait for full stop, if needed
         while (_log_queue_thread.is_active()) {
-            cond.timedWait(_log_queue_mutex, 10);
-        }*/
+            cond.wait_for(lock,std::chrono::milliseconds(10));
+        }
         
         std::cout << "EasyLog::stopProcessing" << std::endl;
     }
@@ -183,11 +187,8 @@ namespace EasyLog {
             if (_shutting_down)  {
                 break;
             }
-
             processItem(item.type, item.visibility, item.msg.c_str(), item.time_stamp);
-
             ++count;
-            //_log_queue_thread.yield();
         }
         return count;
     }
@@ -230,16 +231,21 @@ namespace EasyLog {
                 int64_t curr_time_ms = EasyLogUtils::system_msec_time();
                 int idle_time = int(curr_time_ms - time_ms);
                 if (idle_time > _easy_log->_max_thread_idle_time) {
-                    std::cout << "MonitorLog timeout: " << double(idle_time)/1000.0f << " seconds" << std::endl;
+                    std::cout << "EasyLog timeout: " << double(idle_time)/1000.0f << " seconds" << std::endl;
                     _easy_log->_running = false;
                 }
             }
-            //yield(); // Give up the processor
         }
 
         std::cout << "EasyLogQueue Dispatch Stop";
 
         _is_active = false;
+    }
+    
+    void EasyLog::EasyLogQueueThread::start() {
+        _m_thread = std::thread(&EasyLogQueueThread::run, this);
+        // We want our thread to process in the background
+        _m_thread.detach();
     }
 
 } // End EasyLog namespace
