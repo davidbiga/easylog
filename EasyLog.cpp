@@ -83,13 +83,26 @@ namespace EasyLog {
         }
     }
     /**
-    *  Processes individual EasyLogItem(s)
-    *  -  This method is responsible for delivering messages to user.
-    *  -  See main.cpp for example case.
-    */
-    /*void EasyLog::processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp) {
-        std::cerr << "sdf";
-    }*/
+     *  Processes individual EasyLogItem(s)
+     *  -  This method is responsible for registering the callback function used to send messages to user.
+     *  -  See main.cpp for example case.
+     */
+    void EasyLog::registerProcessItemCallback(void (*callback)(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp), void* proc_item_data) {
+        std::cerr << "EasyLog::registerProcessItemCallback" << std::endl;
+        std::unique_lock<std::mutex> lock(getInstance()._log_queue_mutex);
+        // Set callback
+        getInstance()._on_proc_item_cb = callback;
+    }
+    /**
+     *  Processes individual EasyLogItem(s) if a callback is not present
+     */
+    void EasyLog::processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp) {
+        if(_on_proc_item_cb != nullptr) {
+            _on_proc_item_cb(type, visibility, msg, time_stamp);
+        } else {
+            std::cerr << "Register a callback to get EasyLogItems!  You received a message." << std::endl;
+        }
+    }
     /** 
     *  Adds formatting and creates the EasyLogItem if direct is false
     */
@@ -219,7 +232,7 @@ namespace EasyLog {
     }
 
     void EasyLog::EasyLogQueueThread::run() {
-        std::cout << "EasyLogQueue Dispatch Start";
+        std::cout << "EasyLogQueue Dispatch Start" << std::endl;
 
         _is_active = true;
         int64_t time_ms = EasyLogUtils::system_msec_time();
@@ -237,7 +250,7 @@ namespace EasyLog {
             }
         }
 
-        std::cout << "EasyLogQueue Dispatch Stop";
+        std::cout << "EasyLogQueue Dispatch Stop" << std::endl;
 
         _is_active = false;
     }
