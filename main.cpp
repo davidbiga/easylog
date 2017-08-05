@@ -4,13 +4,16 @@
 
 /**
  * EasyLogSDK Implementation
+ *
+ *  - This class is used as our SDK to receive the callback messages from EasyLog
  */
-
 class EasyLogSDK {
 public:
     static void processItemCallback(::EasyLog::EasyLogType type, ::EasyLog::EasyLogVisibility visibility, const char *msg, int64_t time_stamp);
 };
-
+/**
+*   Registers a callback that is used by EasyLog to send EasLogItem(s)
+*/
 void EasyLogSDK::processItemCallback(::EasyLog::EasyLogType type, ::EasyLog::EasyLogVisibility visibility, const char *msg, int64_t time_stamp){
     // ############
     //  This is critical for the user to implement a callback for EasyLogItem(s) to be received
@@ -75,14 +78,13 @@ void EasyLogSDK::processItemCallback(::EasyLog::EasyLogType type, ::EasyLog::Eas
 
 static EasyLogSDK easy_log_sdk;
 
-/**
- *  Entry point
- */
 int
 main(int argc, const char* argv[]) {
+    // Start singleton
     EasyLog::EasyLog &easy_log = EasyLog::EasyLog::getInstance();
+    // Register callback for EasyLogItems to be returned to
     easy_log.registerProcessItemCallback(EasyLogSDK::processItemCallback, &easy_log_sdk);
-    //EasyLog::EasyLog &easy_log = EasyLog::EasyLog::getInstance();
+    // Let's do ssome EasyLog(ing)!
     easy_log.log(EasyLog::EasyLogType::General, EasyLog::EasyLogVisibility::Public, "Testing public general EasyLog message");
     easy_log.log(EasyLog::EasyLogType::Stats, EasyLog::EasyLogVisibility::Protected, "Testing protected stats EasyLog message");
     easy_log.log(EasyLog::EasyLogType::Error, EasyLog::EasyLogVisibility::Private, "Testing private error EasyLog message");

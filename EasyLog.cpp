@@ -9,6 +9,7 @@
 #define MAX_FORMAT_ARGS_SIZE 4096
 
 // Describes what messages are allowed based on visibility access level
+// - This should be defined by your compiler settings, config file, etc..
 #define EASY_LOG_VISIBILITY 2 // Highest form of access (Public, Protected, Private)
 
 namespace EasyLog {
@@ -35,7 +36,6 @@ namespace EasyLog {
     *   Start/Get singleton instance
     */
     EasyLog& EasyLog::getInstance() {
-        // Lets see if EasyLog was initialized
         static EasyLog s_easy_log;
         return s_easy_log;
     }
@@ -50,7 +50,7 @@ namespace EasyLog {
         // We want to check for greater-than because if EASY_LOG_VISIBILITY is set to 2 (private)
         // it should also receive EasyLog's that have visbility of public and protected because of its clearance
         if (static_cast<int>(visibility) > EASY_LOG_VISIBILITY) {
-            std::cout << "MonitorLog::log supressed.  Message: " << msg << ". Visibility level: " << static_cast<int>(visibility) << ". EASY_LOG_VISIBILITY: " << EASY_LOG_VISIBILITY << std::endl;
+            std::cout << "EasyLog::log supressed.  Message: " << msg << ". Visibility level: " << static_cast<int>(visibility) << ". EASY_LOG_VISIBILITY: " << EASY_LOG_VISIBILITY << std::endl;
             return;
         }
 
@@ -94,7 +94,7 @@ namespace EasyLog {
         getInstance()._on_proc_item_cb = callback;
     }
     /**
-     *  Processes individual EasyLogItem(s) if a callback is not present
+     *  Processes individual EasyLogItem(s)
      */
     void EasyLog::processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp) {
         if(_on_proc_item_cb != nullptr) {
@@ -127,7 +127,7 @@ namespace EasyLog {
     }
 
     /**
-    *  Enqueues a EasyLogItem
+    *  Enqueues an EasyLogItem
     */
     void EasyLog::addItem(EasyLogItem item) {
         std::cout << "EasyLog::addItem" << std::endl;
@@ -160,10 +160,9 @@ namespace EasyLog {
     *   Stop all processing
     */
     void EasyLog::stopProcessing() {
-
         std::cout << "EasyLog::stopProcessing" << std::endl;
-
         std::unique_lock<std::mutex> lock(_log_queue_mutex);
+        
         _running = false;
         _shutting_down = true;
 
@@ -180,7 +179,6 @@ namespace EasyLog {
     *   Returns the next EasyLogItem on the queue
     */
     EasyLog::EasyLogItem EasyLog::getNextItem() {
-
         std::unique_lock<std::mutex> lock(_log_queue_mutex);
 
         assert(_log_queue.size() > 0); //do not call on an empty queue
@@ -192,7 +190,6 @@ namespace EasyLog {
     *   Process all EasyLogItem(s) on the queue
     */
     int EasyLog::processItems() {
-
         int count = 0;
         while (queueSize() > 0) {
             EasyLogItem item = getNextItem();

@@ -119,7 +119,6 @@ namespace EasyLog {
         typedef void (* callback_func)( EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp);
         // Process log callback / data
         EasyLog::callback_func _on_proc_item_cb;
-
     };
 } // End namespace
 
