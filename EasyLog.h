@@ -55,6 +55,8 @@ namespace EasyLog {
         static void log(EasyLogType type, EasyLogVisibility visibility, const std::string &msg);
         // Formats message with callstack and forwards synchronously, then throws an exception - uses the error channel
         static void logFatal(EasyLogVisibility visibility, const char* msg, ...);
+
+        static void registerProcessItemCallback(void (*callback)(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp), void* proc_item_data);
         // Return state of _running - This determines whether our EasyLogQueueThread is processing
         bool isRunning();
         // Allow adjustment of thread idle time
@@ -64,8 +66,8 @@ namespace EasyLog {
         bool _running;
         // Max idle time in ms
         int _max_thread_idle_time;
-        // Applications using EasyLog need to implement the processItem function
-        virtual void processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp) {};
+        // Process EasyLog(s) if no callback exist
+        void processItem(EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp);
     private:
         EasyLog() : _log_queue_thread(this), _running(false), _shutting_down(false), _max_thread_idle_time(MAX_THREAD_IDLE_TIME){};
         // Stop the processing of log items safely
@@ -113,6 +115,11 @@ namespace EasyLog {
         EasyLogQueueThread _log_queue_thread;
         // Current active EasyLog instance - can only be one
         static EasyLog* s_easy_log;
+        // Callback typedef for convenience
+        typedef void (* callback_func)( EasyLogType type, EasyLogVisibility visibility, const char *msg, int64_t time_stamp);
+        // Process log callback / data
+        EasyLog::callback_func _on_proc_item_cb;
+
     };
 } // End namespace
 

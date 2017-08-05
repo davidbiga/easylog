@@ -2,17 +2,18 @@
 
 #include <iostream>
 
-class EasyLogSDK : public EasyLog::EasyLog {
-public:
-    virtual void processItem(::EasyLog::EasyLogType type, ::EasyLog::EasyLogVisibility visibility, const char *msg, int64_t time_stamp);
-};
-
 /**
  * EasyLogSDK Implementation
  */
-void EasyLogSDK::processItem(::EasyLog::EasyLogType type, ::EasyLog::EasyLogVisibility visibility, const char *msg, int64_t time_stamp){
+
+class EasyLogSDK {
+public:
+    static void processItemCallback(::EasyLog::EasyLogType type, ::EasyLog::EasyLogVisibility visibility, const char *msg, int64_t time_stamp);
+};
+
+void EasyLogSDK::processItemCallback(::EasyLog::EasyLogType type, ::EasyLog::EasyLogVisibility visibility, const char *msg, int64_t time_stamp){
     // ############
-    //  This is critical for the user to override processItem in their subclass of EasyLog in order to get log messages
+    //  This is critical for the user to implement a callback for EasyLogItem(s) to be received
     // ############
     std::string n_type, n_visibility;
     
@@ -72,15 +73,21 @@ void EasyLogSDK::processItem(::EasyLog::EasyLogType type, ::EasyLog::EasyLogVisi
 *   End EasyLogSDK Implementation
 */
 
+static EasyLogSDK easy_log_sdk;
+
+/**
+ *  Entry point
+ */
 int
 main(int argc, const char* argv[]) {
-    EasyLogSDK::EasyLog &easy_log_sdk = EasyLogSDK::EasyLog::getInstance();
+    EasyLog::EasyLog &easy_log = EasyLog::EasyLog::getInstance();
+    easy_log.registerProcessItemCallback(EasyLogSDK::processItemCallback, &easy_log_sdk);
     //EasyLog::EasyLog &easy_log = EasyLog::EasyLog::getInstance();
-    easy_log_sdk.log(EasyLog::EasyLogType::General, EasyLog::EasyLogVisibility::Public, "Testing public general EasyLog message");
-    easy_log_sdk.log(EasyLog::EasyLogType::Stats, EasyLog::EasyLogVisibility::Protected, "Testing protected stats EasyLog message");
-    easy_log_sdk.log(EasyLog::EasyLogType::Error, EasyLog::EasyLogVisibility::Private, "Testing private error EasyLog message");
+    easy_log.log(EasyLog::EasyLogType::General, EasyLog::EasyLogVisibility::Public, "Testing public general EasyLog message");
+    easy_log.log(EasyLog::EasyLogType::Stats, EasyLog::EasyLogVisibility::Protected, "Testing protected stats EasyLog message");
+    easy_log.log(EasyLog::EasyLogType::Error, EasyLog::EasyLogVisibility::Private, "Testing private error EasyLog message");
     // Wait for EasyLogQueue Dispatch to finish
-    while(easy_log_sdk.isRunning()){}
+    while(easy_log.isRunning()){}
     // End program
     return 0;
 }
