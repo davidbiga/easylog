@@ -13,4 +13,5 @@ EasyLog is a simple C++ logging mechanism that can be used for all debugging and
 For exact implementation and usage, see `main.cpp`.
 
 # Important EasyLog Details
-#### `EASY_LOG_VISIBILITY` - Tells access levels for EasyLogItem(s).  This is useful for internal systems that want to limit certain messages from being sent to a client. `0 = Public` - `1 = Protected` - `2 = Private`.  If the system logs as `EasyLogVisibility::Private` and `EASY_LOG_VISIBILITY` is set to `1`, this message will be supressed.
+#### `EASY_LOG_VISIBILITY`
+Tells access levels for EasyLogItem(s).  This is useful for internal systems that want to limit certain messages from being sent to a client. `0 = Public` - `1 = Protected` - `2 = Private`.  If the system logs as `EasyLogVisibility::Private` and `EASY_LOG_VISIBILITY` is set to `1`, this message will be supressed.
