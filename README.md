@@ -18,10 +18,10 @@ EasyLog::registerProcessItemCallback
 EasyLog::addItem
 EasyLog::addItem size: 1
 EasyLog::addItem
-EasyLog::addItem size: EasyLogQueue Dispatch Start
-2
-EasyLog::addItem
 EasyLog::addItem size: 2
+EasyLogQueue Dispatch Start
+EasyLog::addItem
+EasyLog::addItem size: 3
 [GENERAL 17:07:29:1502316] Testing public general EasyLog message
  [EasyLogType:] General [EasyLogVisibility:] Public [TimeStamp:] 1502316449794
 [STATS 17:07:29:1502316] Testing protected stats EasyLog message
